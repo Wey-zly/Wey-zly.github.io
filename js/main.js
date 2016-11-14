@@ -1,122 +1,79 @@
-$(function() {
-    var isPhone = $(window).width() < 768;
+var alphaDust = function () {
 
-    init();
+    var _menuOn = false;
 
-    function init() {
-        // $('.material-preloader').hide();
-        initialNavToggle();
-        setupRipple();
-        slidingBorder();
-        toc();
+    function initPostHeader() {
+        $('.main .post').each(function () {
+            var $post = $(this);
+            var $header = $post.find('.post-header.index');
+            var $title = $post.find('h1.title');
+            var $readMoreLink = $post.find('a.read-more');
 
-        $('.post-content img').on('click',function(){
-            window.open($(this).attr('src'));
+            var toggleHoverClass = function () {
+                $header.toggleClass('hover');
+            };
+
+            $title.hover(toggleHoverClass, toggleHoverClass);
+            $readMoreLink.hover(toggleHoverClass, toggleHoverClass);
         });
     }
 
-    function slidingBorder() {
-        // sliding border
-        var $activeState = $('.nav-indicator', 'nav'),
-            $navParent = $('.menu-wrapper', 'nav'),
-            overNav = false,
-            $hoveredLink,
-            $activeLink = $("ul.menus li.active a"),
-            activeHideTimeout;
-        setActiveLink(true);
-        $('.menu-wrapper ul.menus li').on('mousemove', onLinkHover);
-        $('.menu-wrapper').on('mouseleave', onLinksLeave);
+    function _menuShow () {
+        $('nav a').addClass('menu-active');
+        $('.menu-bg').show();
+        $('.menu-item').css({opacity: 0});
+        TweenLite.to('.menu-container', 1, {padding: '0 40px'});
+        TweenLite.to('.menu-bg', 1, {opacity: '0.92'});
+        TweenMax.staggerTo('.menu-item', 0.5, {opacity: 1}, 0.3);
+        _menuOn = true;
 
-        function onLinkHover(e) {
-            if (!isPhone) {
-                $hoveredLink = e.target ? $(e.target) : e;
-                if (!$hoveredLink.is('li')) {
-                    $hoveredLink = $hoveredLink.parent('li');
-                }
-                var left = $hoveredLink.offset().left - $navParent.offset().left,
-                    width = $hoveredLink.width();
-                if (0 != $activeLink.length || overNav) {
-                    $activeState.css({
-                        transform: "translate3d(" + left + "px, 0, 0) scaleX(" + width / 100 + ")"
-                    });
-                } else {
-                    clearTimeout(activeHideTimeout),
-                        $activeState.css({
-                            transform: "translate3d(" + (left + width / 2) + "px, 0, 0) scaleX(0.001)"
-                        });
-                    setTimeout(function() {
-                        $activeState.addClass("animate-indicator").css({
-                            transform: "translate3d(" + left + "px, 0, 0) scaleX(" + width / 100 + ")"
-                        })
-                    }, 10);
-                }
-                overNav = true;
-            }
-        }
-
-        function onLinksLeave(e) {
-            if (!isPhone) {
-                if (0 == $activeLink.length) {
-                    var left = $hoveredLink.offset().left - $navParent.offset().left,
-                        width = $hoveredLink.width();
-                    $activeState.css({
-                        'transform': "translate3d(" + (left + width / 2) + "px, 0, 0) scaleX(0.001)"
-                    });
-                    activeHideTimeout = setTimeout(function() {
-                        $activeState.removeClass("animate-indicator")
-                    }, 200);
-                } else {
-                    onLinkHover($activeLink);
-                }
-                overNav = false;
-            }
-        }
-
-        function setActiveLink(load) {
-            if ($activeLink.length > 0) {
-                var left = $activeLink.offset().left - $navParent.offset().left;
-                $activeState.css({
-                    'transform': "translate3d(" + (left + $activeLink.width() / 2) + "px, 0, 0) scaleX(0.001)"
-                });
-                setTimeout(function() {
-                    $activeState.addClass("animate-indicator"),
-                        onLinkHover($activeLink)
-                }, 100);
-            }
-        }
-    }
-
-    function toc() {
-        if (!isPhone) {
-            //toc
-            $('#toc').html('');
-            $('#toc').tocify({
-                'selectors': 'h2,h3',
-                'extendPage': false,
-                'theme': 'none',
-                'scrollHistory':false
-            });
-        }
-    }
-
-    function initialNavToggle() {
-        //nav icon morphing
-        $('.nav-toggle-icon').click(function() {
-            $('body').toggleClass('nav-active');
-            $(this).toggleClass('active').find('.material-hamburger').toggleClass('opened');
-            $('.menu-wrapper').toggleClass('active');
-            $('.logo').toggleClass('fixed');
+        $('.menu-bg').hover(function () {
+            $('nav a').toggleClass('menu-close-hover');
         });
     }
 
-    function setupRipple() {
-        // ripple click http://fian.my.id/Waves/#start
-        Waves.attach('.wave');
-        Waves.attach('.main.index .post-header.with-cover');
-        Waves.attach('.pagination a');
-        Waves.attach('.pager .pager-item', ['waves-button']);
-        Waves.attach('.btn', ['waves-button']);
-        Waves.init();
+    function _menuHide() {
+        $('nav a').removeClass('menu-active');
+        TweenLite.to('.menu-bg', 0.5, {opacity: '0', onComplete: function () {
+            $('.menu-bg').hide();
+        }});
+        TweenLite.to('.menu-container', 0.5, {padding: '0 100px'});
+        $('.menu-item').css({opacity: 0});
+        _menuOn = false;
     }
 
-})
+    function initMenu() {
+
+        $('nav a').click(function () {
+            if(_menuOn) {
+                _menuHide();
+            } else {
+                _menuShow();
+            }
+        });
+
+        $('.menu-bg').click(function (e) {
+            if(_menuOn && e.target === this) {
+                _menuHide();
+            }
+        });
+    }
+
+    function displayArchives() {
+        $('.archive-post').css({opacity: 0});
+        TweenMax.staggerTo('.archive-post', 0.4, {opacity: 1}, 0.15);
+    }
+
+    return {
+        initPostHeader: initPostHeader,
+        initMenu: initMenu,
+        displayArchives: displayArchives
+    };
+}();
+
+
+$(document).ready(function () {
+    alphaDust.initPostHeader();
+    alphaDust.initMenu();
+    alphaDust.displayArchives();
+});
